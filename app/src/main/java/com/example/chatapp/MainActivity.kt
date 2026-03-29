@@ -4,34 +4,37 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.chatapp.ui.theme.AppTheme
+import com.example.chatapp.views.ChatScreen
+import com.example.chatapp.views.LoginScreen
+import com.google.firebase.FirebaseApp
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        FirebaseApp.initializeApp(this)
         setContent {
             AppTheme {
+                val navController = rememberNavController()
+                val startRoute = "login"
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding).padding(16.dp)
-                    )
+                    Box(modifier = Modifier.padding(innerPadding)) {
+                        AppNavigation(
+                            navController = navController,
+                            startDestination = startRoute
+                        )
+                    }
                 }
             }
         }
@@ -39,32 +42,24 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+fun AppNavigation(navController: NavHostController, startDestination: String) {
+    NavHost(
+        navController = navController,
+        startDestination = startDestination
     ) {
-        Text(
-            text = "Hello $name!",
-            fontSize = 24.sp
-        )
-        Button(
-            onClick = {},
-            shape = RoundedCornerShape(10.dp),
-            modifier = Modifier.width(150.dp)
-        )
-        {
-            Text(text = "Press")
+        // --- Login Screen ---
+        composable("login") {
+            LoginScreen(onLoginSuccess = {
+                // Navigate to home and REMOVE login from the backstack
+                navController.navigate("home") {
+                    popUpTo("login") { inclusive = true }
+                }
+            })
         }
-    }
 
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    AppTheme {
-        Greeting("Android")
+        // --- Home ---
+        composable("home") {
+            ChatScreen()
+        }
     }
 }
