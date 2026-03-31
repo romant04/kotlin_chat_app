@@ -23,12 +23,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.chatapp.viewmodels.ProfileViewModel
 
 @Composable
 fun ProfileScreen(onLogout: () -> Unit, viewModel: ProfileViewModel = viewModel()) {
-    val state by viewModel.uiState
+    val state by viewModel.userState.collectAsStateWithLifecycle()
 
     Box(modifier = Modifier.fillMaxSize()) {
         // Main Content
@@ -36,7 +37,7 @@ fun ProfileScreen(onLogout: () -> Unit, viewModel: ProfileViewModel = viewModel(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(24.dp)
-                .alpha(if (state.isLoading) 0.3f else 1f), // Dim UI while loading
+                .alpha(if (state == null) 0.3f else 1f), // Dim UI while loading
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -50,17 +51,17 @@ fun ProfileScreen(onLogout: () -> Unit, viewModel: ProfileViewModel = viewModel(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = if (state.username.isNotEmpty()) "@${state.username}" else "Fetching...",
+                text = if (state != null) "@${state!!.username}" else "Fetching...",
                 style = MaterialTheme.typography.headlineSmall
             )
 
-            Text(text = state.email)
+            Text(text = state?.email ?: "")
 
             Spacer(modifier = Modifier.height(40.dp))
 
             Button(
                 onClick = { viewModel.logout(onLogout) },
-                enabled = !state.isLoading, // Disable button while loading
+                enabled = state != null, // Disable button while loading
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -69,7 +70,7 @@ fun ProfileScreen(onLogout: () -> Unit, viewModel: ProfileViewModel = viewModel(
         }
 
         // Loading Overlay
-        if (state.isLoading) {
+        if (state == null) {
             CircularProgressIndicator(
                 modifier = Modifier.align(Alignment.Center),
                 color = MaterialTheme.colorScheme.primary

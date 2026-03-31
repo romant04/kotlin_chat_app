@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.chatapp.data.repository.AuthRepository
+import com.example.chatapp.data.repository.UserRepository
 import com.example.chatapp.views.LoginUiState
 import kotlinx.coroutines.launch
 
@@ -65,6 +66,7 @@ class LoginViewModel(private val repository: AuthRepository = AuthRepository()) 
             }
 
             result.onSuccess {
+                UserRepository.startListening()
                 onSuccess()
             }.onFailure { exception ->
                 _uiState.value = _uiState.value.copy(

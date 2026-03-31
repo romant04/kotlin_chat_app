@@ -15,6 +15,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.chatapp.views.ChatScreen
+import com.example.chatapp.views.FriendsScreen
 import com.example.chatapp.views.LoginScreen
 import com.example.chatapp.views.ProfileScreen
 
@@ -74,7 +75,9 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
             }
 
             composable(Destinations.Friends.route) {
-                ChatScreen() // TODO: Swap for real friends screen
+                FriendsScreen(onNavigateToChat = { friendId ->
+                    navController.navigate("chat_detail/$friendId")
+                })
             }
 
             composable(Destinations.Profile.route) {

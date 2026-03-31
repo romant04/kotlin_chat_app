@@ -4,7 +4,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.compose.rememberNavController
+import com.example.chatapp.data.repository.UserRepository
 import com.example.chatapp.navigation.AppNavigation
 import com.example.chatapp.navigation.Destinations
 import com.example.chatapp.ui.theme.AppTheme
@@ -22,6 +24,7 @@ class MainActivity : ComponentActivity() {
 
         // 2. Logic to decide where to start
         val currentUser = FirebaseAuth.getInstance().currentUser
+
         val startRoute = if (currentUser != null) {
             Destinations.Chats.route
         } else {
@@ -29,6 +32,10 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
+            LaunchedEffect(Unit) {
+                UserRepository.startListening()
+            }
+
             AppTheme {
                 val navController = rememberNavController()
                 AppNavigation(
@@ -37,5 +44,11 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Clean up when the activity is destroyed to prevent memory leaks
+        UserRepository.stopListening()
     }
 }
