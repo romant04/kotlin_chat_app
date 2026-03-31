@@ -1,5 +1,6 @@
 package com.example.chatapp.data.repository
 
+import com.example.chatapp.data.models.User
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
@@ -8,6 +9,15 @@ import kotlinx.coroutines.tasks.await
 class AuthRepository {
     private val auth = Firebase.auth
     private val db = Firebase.firestore
+
+    suspend fun getUserData(uid: String): User? {
+        return try {
+            val snapshot = db.collection("users").document(uid).get().await()
+            snapshot.toObject(User::class.java)
+        } catch (e: Exception) {
+            null
+        }
+    }
 
     suspend fun loginUser(email: String, pass: String): Result<Unit> {
         return try {
@@ -21,8 +31,6 @@ class AuthRepository {
 
     suspend fun registerUser(username: String, email: String, pass: String): Result<Unit> {
         return try {
-            val db = Firebase.firestore
-
             // 1. Check Username Unique
             val snapshot = db.collection("users")
                 .whereEqualTo("username", username)
@@ -38,14 +46,14 @@ class AuthRepository {
             val uid = authResult.user?.uid ?: throw Exception("User ID null")
 
             // 3. Save to Firestore
-            val userMap = mapOf(
-                "uid" to uid,
-                "username" to username,
-                "email" to email,
-                "friends" to emptyList<String>()
+            val newUser = User(
+                uid = uid,
+                username = username,
+                email = email,
+                friends = emptyList()
             )
 
-            db.collection("users").document(uid).set(userMap).await()
+            db.collection("users").document(uid).set(newUser).await()
 
             Result.success(Unit)
         } catch (e: Exception) {
