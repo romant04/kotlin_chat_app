@@ -35,8 +35,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.chatapp.data.models.User
+import com.example.chatapp.utils.ChatUtils
 import com.example.chatapp.viewmodels.FriendScreenMode
 import com.example.chatapp.viewmodels.FriendsViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun FriendsScreen(
@@ -96,7 +98,10 @@ fun FriendsScreen(
                             mode = mode,
                             onActionClick = {
                                 if (mode == FriendScreenMode.MY_FRIENDS) {
-                                    onNavigateToChat(user.uid)
+                                    val myUid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+                                    val chatId = ChatUtils.getChatId(myUid, user.uid)
+                                    // Pass both ID and Name
+                                    onNavigateToChat("$chatId/${user.username}")
                                 } else {
                                     viewModel.addFriend(user)
                                 }

@@ -1,5 +1,6 @@
 package com.example.chatapp.navigation
 
+import android.net.Uri
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -11,13 +12,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.example.chatapp.views.ChatScreen
+import androidx.navigation.navArgument
+import com.example.chatapp.views.ChatDetailScreen
 import com.example.chatapp.views.FriendsScreen
 import com.example.chatapp.views.LoginScreen
 import com.example.chatapp.views.ProfileScreen
+import com.example.chatapp.views.RecentChatsScreen
 
 
 @Composable
@@ -26,7 +30,8 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
     val currentRoute = navBackStackEntry?.destination?.route
 
     // Only show bottom bar if the current route is one of our 3 main tabs
-    val showBottomBar = Destinations.bottomNavItems.any { it.route == currentRoute }
+    val showBottomBar =
+        Destinations.bottomNavItems.any { it.route == currentRoute || it.route.contains("chat_detail/") }
 
     Scaffold(
         bottomBar = {
@@ -71,13 +76,23 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
             }
 
             composable(Destinations.Chats.route) {
-                ChatScreen()
+                RecentChatsScreen(
+                    onNavigateToChat = { id, name ->
+                        // 1. Encode the name to handle spaces/special characters
+                        val encodedName = Uri.encode(name)
+
+                        // 2. Navigate using the pattern: chat_detail/{chatId}/{userName}
+                        navController.navigate("chat_detail/$id/$encodedName")
+                    }
+                )
             }
 
             composable(Destinations.Friends.route) {
-                FriendsScreen(onNavigateToChat = { friendId ->
-                    navController.navigate("chat_detail/$friendId")
-                })
+                FriendsScreen(
+                    onNavigateToChat = { route ->
+                        navController.navigate("chat_detail/$route")
+                    }
+                )
             }
 
             composable(Destinations.Profile.route) {
@@ -89,10 +104,21 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
                 })
             }
 
-            // Note: This route is NOT in bottomNavItems, so the bar will disappear here!
-            composable("chat_detail/{friendId}") { backStackEntry ->
-                val friendId = backStackEntry.arguments?.getString("friendId")
-                ChatScreen() // TODO: Swap for active/opened chat
+            composable(
+                route = "chat_detail/{chatId}/{friendName}",
+                arguments = listOf(
+                    navArgument("chatId") { type = NavType.StringType },
+                    navArgument("friendName") { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val chatId = backStackEntry.arguments?.getString("chatId") ?: ""
+                val friendName = backStackEntry.arguments?.getString("friendName") ?: "Friend"
+
+                ChatDetailScreen(
+                    chatId = chatId,
+                    friendName = friendName,
+                    onBack = { navController.popBackStack() }
+                )
             }
         }
     }
