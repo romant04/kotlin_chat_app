@@ -51,7 +51,7 @@ fun ChatDetailScreen(
     // 2. Auto-scroll to bottom when messages change
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
-            listState.animateScrollToItem(0) // 0 because reverseLayout = true
+            listState.animateScrollToItem(messages.size - 1)
         }
     }
 

@@ -21,7 +21,6 @@ class AuthRepository {
 
     suspend fun loginUser(email: String, pass: String): Result<Unit> {
         return try {
-            // we use await() to turn the Firebase callback into a straight line of code
             auth.signInWithEmailAndPassword(email, pass).await()
             Result.success(Unit)
         } catch (e: Exception) {
